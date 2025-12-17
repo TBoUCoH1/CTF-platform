@@ -1,0 +1,28 @@
+#!/bin/bash
+
+# Путь установки (измените если переместили)
+INSTALL_PATH="$HOME/.local/share/ctf-platform"
+
+# Проверить что путь существует
+if [ ! -d "$INSTALL_PATH" ]; then
+    echo "❌ CTF Platform not installed at: $INSTALL_PATH"
+    echo ""
+    echo "Please install first:"
+    echo "  cd CTF-Platform-v1.0.0-Linux"
+    echo "  ./install.sh"
+    exit 1
+fi
+
+cd "$INSTALL_PATH"
+
+# Проверить и запустить backend
+if ! docker ps 2>/dev/null | grep -q ctf_backend; then
+    echo "🐳 Starting backend..."
+    docker-compose up -d 2>/dev/null
+    sleep 3
+fi
+
+# Установить темную тему и запустить
+export GTK_THEME=Adwaita:dark
+export QT_QPA_PLATFORMTHEME=gtk3
+./bin/CTFApp

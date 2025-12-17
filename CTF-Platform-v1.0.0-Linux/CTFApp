@@ -1,0 +1,19 @@
+#!/bin/bash
+
+# Определить директорию скрипта
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+cd "$SCRIPT_DIR"
+
+# Установить переменные окружения для темной темы
+export GTK_THEME=Adwaita:dark
+export QT_QPA_PLATFORMTHEME=gtk3
+
+# Проверить что бинарник существует
+if [ ! -f "$SCRIPT_DIR/bin/CTFApp" ]; then
+    echo "❌ Error: CTFApp binary not found in $SCRIPT_DIR/bin/"
+    echo "Please run from the correct directory"
+    exit 1
+fi
+
+# Запустить приложение
+"$SCRIPT_DIR/bin/CTFApp" "$@"

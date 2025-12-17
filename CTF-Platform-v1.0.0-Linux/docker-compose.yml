@@ -1,0 +1,66 @@
+version: '3.8'
+
+services:
+  # PostgreSQL база данных
+  db:
+    image: postgres:15-alpine
+    container_name: ctf_database
+    environment:
+      POSTGRES_USER: ctf_user
+      POSTGRES_PASSWORD: ctf_password
+      POSTGRES_DB: ctf_db
+    volumes:
+      - ./db/init.sql:/docker-entrypoint-initdb.d/init.sql
+      - postgres_data:/var/lib/postgresql/data
+    ports:
+      - "5432:5432"
+    networks:
+      - ctf_network
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ctf_user -d ctf_db"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # Backend API (Go)
+  backend:
+    build: 
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: ctf_backend
+    environment:
+      JWT_SECRET: "xK9$$mP2nQ#5rS8tU!vW3xY6zA9bC4dE7fG0hJ3kL6mN"
+      DB_USER: "ctf_user"
+      DB_PASSWORD: "ctf_password"
+      DB_HOST: "db"
+      DB_PORT: "5432"
+      DB_NAME: "ctf_db"
+    volumes:
+      - ./backend/files:/app/files
+    ports:
+      - "8080:8080"
+    depends_on:
+      db:
+        condition: service_healthy
+    networks:
+      - ctf_network
+    restart: unless-stopped
+
+  # Web сервер для CTF заданий (Go)
+  web:
+    build:
+      context: ./web
+      dockerfile: Dockerfile
+    container_name: ctf_web
+    ports:
+      - "5000:5000"
+    networks:
+      - ctf_network
+    restart: unless-stopped
+
+volumes:
+  postgres_data:
+
+networks:
+  ctf_network:
+    driver: bridge
